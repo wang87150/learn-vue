@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VUe</title>
+</head>
+<body>
+  <div id="app" :class="main" attr="nihao ">
+    <li class="li-c">
+      <a href="####">Hello {{arr}} World!</a>
+    </li>
+    <li class="li-c">
+      <h1>ssss</h1>
+    </li>
+  </div>
+</body>
+<script src="dist/umd/vue.js"></script>
+<script>
+  const vm = new Vue({
+    el: '#app',
+    data() {
+      return {
+        arr: [
+          {
+            name: 'wzy'
+          },
+          {
+            name: '123'
+          }
+        ]
+      }
+    }
+  })
+</script>
+</html>
