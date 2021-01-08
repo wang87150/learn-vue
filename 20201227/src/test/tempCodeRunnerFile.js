@@ -1,5 +1,9 @@
+let arrr = ['a', 'b', 'c', 'd', 'e'];
+let obj = {}
+let aa = arrr.reduce((total, item, index, list) => {
+   
+  total[item] = {}
+  return total[item];
+}, obj);
 
-let aa = [1,2,3,4,5,6,7,8];
-let bb = aa.splice(-0, 0, ['a', 'b', 'c']);
-console.log(aa);
-console.log(bb);
+console.log(obj)
