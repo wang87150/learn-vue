@@ -140,11 +140,54 @@
       return root;
     }
 
+    var defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g;
     function generate(root) {
-      //_c('div', {id: 'a', attr: 'b'}, 'Hello')
-      console.log(root);
-      var str = "_c('".concat(root.tag, "',").concat(root.attrs.length ? getAttrStr(root.attrs) : 'undefine', ")");
+      //_c('div', {id: 'a', attr: 'b'}, _v('Hello'))
+      var children = getChildStr(root.children); //'Hello' + arr + 'World'
+
+      var str = "_c('".concat(root.tag, "',").concat(root.attrs.length ? getAttrStr(root.attrs) : 'undefine').concat(children ? ",".concat(children) : '', ")");
       return str;
+    }
+
+    function getChildStr(children) {
+
+      if (children) {
+        return children.map(function (child) {
+          return gen(child);
+        }).join(',');
+      }
+
+      return false;
+    }
+
+    function gen(child) {
+      if (child.type == '1') {
+        return generate(child);
+      }
+
+      if (child.type == '3') {
+        var text = child.text;
+
+        if (!defaultTagRE.test(text)) {
+          //匹配不到
+          return "_v('".concat(text, "')");
+        } else {
+          //能匹配到，需要用正则不停的匹配，分割字符串 //'Hello' + arr + 'World'
+          var strs = [];
+          var match;
+          var lastIndex = defaultTagRE.lastIndex = 0;
+
+          while (match = defaultTagRE.exec(text)) {
+            var index = match.index;
+            strs.push(JSON.stringify(text.slice(lastIndex, index)));
+            lastIndex = index + match[0].length;
+            strs.push("_s(".concat(match[1].trim(), ")"));
+          }
+
+          strs.push(JSON.stringify(text.slice(lastIndex)));
+          return "_v(".concat(strs.join('+'), ")");
+        }
+      }
     }
 
     function getAttrStr(attrs) {

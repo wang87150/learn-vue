@@ -9,4 +9,3 @@ export function compileToFunction(template) {
   console.log(code);
   return function() {}
 }
-
