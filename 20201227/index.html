@@ -6,13 +6,8 @@
   <title>VUe</title>
 </head>
 <body>
-  <div id="app" :class="main" style="color: red ; font-size: 12px ;" attr="nihao ">
-    <li class="li-c">
-      <a href="####">Hello {{arr}} World {{arr}} !</a>
-    </li>
-    <li class="li-c">
-      <h1>ssss</h1>
-    </li>
+  <div id="app" class="main" style="color: red ; font-size: 12px ;" attr="nihao ">
+    <h1>wzy {{msg}} tll</h1>
   </div>
 </body>
 <script src="dist/umd/vue.js"></script>
@@ -21,6 +16,7 @@
     el: '#app',
     data() {
       return {
+        msg: 'Hello World',
         arr: [
           {
             name: 'wzy'

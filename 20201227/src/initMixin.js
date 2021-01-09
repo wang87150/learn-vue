@@ -1,4 +1,5 @@
 import { compileToFunction } from "./compile/index";
+import { mountComponent } from "./lifecycle";
 import initStates from "./state";
 
 export default initMixin;
@@ -21,11 +22,14 @@ function initMixin(Vue) {
     if (!options.render) {
       //render的优先级比el高
       el = document.querySelector(el);
+      vm.$el = el;
       let template = options.template;
       if(!template && el) {
         template = el.outerHTML;
       }
       options.render = compileToFunction(template);
     }
+
+    mountComponent(vm, el);
   }
 }

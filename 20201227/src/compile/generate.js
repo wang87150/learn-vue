@@ -3,7 +3,7 @@ const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g
 export function generate(root) {    //_c('div', {id: 'a', attr: 'b'}, _v('Hello'))
     let children = getChildStr(root.children);  //'Hello' + arr + 'World'
     let str = `_c('${root.tag}',${
-        root.attrs.length ? getAttrStr(root.attrs) : 'undefine'
+        root.attrs.length ? getAttrStr(root.attrs) : 'undefined'
     }${
         children ? `,${children}`: ''
     })`;
