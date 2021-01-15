@@ -12,6 +12,7 @@ export function observe(data) {
 
 class Observe {
   constructor(data) {
+    this.dep = new Dep();
     data.__ob__ = this;
     Object.defineProperty(data, '__ob__', {
       value: this,
@@ -40,6 +41,15 @@ class Observe {
   }
 }
 
+function dependArray(value) {
+  for (let i = 0; i < value.lengrh; i++) {
+    let current = value[i];
+    current.__ob__ && current.__ob__.dep.depend();
+    if (Array.isArray(current)) {
+      dependArray(current);
+    }
+  }
+}
 
 function defineReactive(data, key, value) {
   //因为对象的层级可能很深，也就是value也是一个对象，所以需要对value也进行遍历劫持
@@ -48,8 +58,13 @@ function defineReactive(data, key, value) {
   Object.defineProperty(data, key, {
     get() {
       //取值时，将当前属性对应的watcher存放到属性自己的dep中
-      console.log('watcher', Dep.target)
-      dep.addWatcher(Dep.target);
+      dep.depend();
+      if (childOb) {
+        childOb.dep.depend();
+        if (Array.isArray(value)) {
+          dependArray(value);
+        }
+      }
       return value;
     },
     set(newValue) {

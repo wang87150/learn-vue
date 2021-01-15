@@ -23,5 +23,7 @@ methods.forEach((method) => {
     }
 
     if (insertItems) ob.observeArray(insertItems);
+
+    ob.dep.notify();    //通知watcher更新
   }
 })

@@ -1,6 +1,6 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('rollup')) :
-    typeof define === 'function' && define.amd ? define(['rollup'], factory) :
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Vue = factory());
 }(this, (function () { 'use strict';
 
@@ -268,6 +268,55 @@
       return Constructor;
     }
 
+    var uid = 0;
+
+    var Dep = /*#__PURE__*/function () {
+      function Dep() {
+        _classCallCheck(this, Dep);
+
+        this.uid = uid++;
+        this.watchers = []; //收集
+      }
+
+      _createClass(Dep, [{
+        key: "depend",
+        value: function depend() {
+          if (Dep.target) {
+            Dep.target.addDep(this); //将dep添加进watcher中
+          }
+        }
+      }, {
+        key: "addWatcher",
+        value: function addWatcher(watcher) {
+          this.watchers.push(watcher);
+        }
+      }, {
+        key: "notify",
+        value: function notify() {
+          this.watchers.forEach(function (watcher) {
+            watcher.update();
+          });
+        }
+      }, {
+        key: "run",
+        value: function run() {
+          this.watchers.forEach(function (watcher) {
+            watcher.update();
+          });
+        }
+      }]);
+
+      return Dep;
+    }();
+
+    Dep.target = null;
+    function pushTarget(watcher) {
+      Dep.target = watcher;
+    }
+    function popTarget() {
+      Dep.target = null;
+    }
+
     var cbs = [];
     var waiting = false;
 
@@ -320,57 +369,6 @@
       }
     }
 
-    var uid = 0;
-
-    var Dep = /*#__PURE__*/function () {
-      function Dep() {
-        _classCallCheck(this, Dep);
-
-        this.uid = uid++;
-        this.watchers = []; //收集
-
-        this.ids = [];
-      }
-
-      _createClass(Dep, [{
-        key: "addWatcher",
-        value: function addWatcher(watcher) {
-          var id = watcher.uid;
-
-          if (!this.ids.includes(id)) {
-            //如果没有存放，则开始存放，并且将id也存入ids中
-            this.watchers.push(watcher);
-            watcher.addDep(this);
-            this.ids.push(id);
-          }
-        }
-      }, {
-        key: "notify",
-        value: function notify() {
-          //vue中的更新是异步的，等待所有的变量赋值完毕后，一把更新
-          //---所以需要先将watcher缓存起来，最后在调用run方法
-          queueWatchers(this);
-        }
-      }, {
-        key: "run",
-        value: function run() {
-          this.watchers.forEach(function (watcher) {
-            watcher.update();
-          });
-        }
-      }]);
-
-      return Dep;
-    }();
-
-    Dep.target = null;
-    function pushTarget(watcher) {
-      Dep.target = watcher;
-    }
-    function popTarget() {
-      Dep.target = null;
-    }
-
     var uid$1 = 0;
 
     var Watcher = /*#__PURE__*/function () {
@@ -385,6 +383,8 @@
         this.getter = updateOrFn; //执行它 会加载变量数据，到变量的get方法
 
         this.deps = []; //收集deps，主要是为了计算watcher跟watch使用。
+
+        this.depIds = []; //手机dep的id，防止重复添加
         //默认加载一次
 
         this.get();
@@ -401,12 +401,25 @@
       }, {
         key: "addDep",
         value: function addDep(dep) {
-          this.deps.push(dep);
+          var depId = dep.uid;
+
+          if (!this.depIds.includes(depId)) {
+            //没有添加过，
+            this.deps.push(dep);
+            this.depIds.push(depId);
+            dep.addWatcher(this);
+          }
         }
       }, {
         key: "update",
         value: function update() {
-          console.log('update');
+          //vue中的更新是异步的，等待所有的变量赋值完毕后，一把更新
+          //---所以需要先将watcher缓存起来，最后在调用run方法
+          queueWatchers(this);
+        }
+      }, {
+        key: "run",
+        value: function run() {
           this.get();
         }
       }]);
@@ -506,6 +519,7 @@
         }
 
         if (insertItems) ob.observeArray(insertItems);
+        ob.dep.notify(); //通知watcher更新
       };
     });
 
@@ -521,6 +535,7 @@
       function Observe(data) {
         _classCallCheck(this, Observe);
 
+        this.dep = new Dep();
         data.__ob__ = this;
         Object.defineProperty(data, '__ob__', {
           value: this,
@@ -558,6 +573,17 @@
       return Observe;
     }();
 
+    function dependArray(value) {
+      for (var i = 0; i < value.lengrh; i++) {
+        var current = value[i];
+        current.__ob__ && current.__ob__.dep.depend();
+
+        if (Array.isArray(current)) {
+          dependArray(current);
+        }
+      }
+    }
+
     function defineReactive(data, key, value) {
       //因为对象的层级可能很深，也就是value也是一个对象，所以需要对value也进行遍历劫持
       var childOb = observe(value);
@@ -565,8 +591,16 @@
       Object.defineProperty(data, key, {
         get: function get() {
           //取值时，将当前属性对应的watcher存放到属性自己的dep中
-          console.log('watcher', Dep.target);
-          dep.addWatcher(Dep.target);
+          dep.depend();
+
+          if (childOb) {
+            childOb.dep.depend();
+
+            if (Array.isArray(value)) {
+              dependArray(value);
+            }
+          }
+
           return value;
         },
         set: function set(newValue) {
@@ -596,9 +630,9 @@
     }
 
     function initData(vm) {
-      var data = vm.$options.data;
-      data = vm._data = isFunction(data) ? data() : data; // data = isFunction(data) ? data.call(vm) : data;
-      //对data的第一层数据进行代理 使得vm.name === vm._data.name;
+      var data = vm.$options.data; // data = vm._data = isFunction(data) ? data() : data;
+
+      data = vm._data = isFunction(data) ? data.call(vm) : data; //对data的第一层数据进行代理 使得vm.name === vm._data.name;
 
       for (var key in data) {
         proxy(vm, '_data', key);

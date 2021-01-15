@@ -19,8 +19,8 @@ function proxy(vm, source, key) {
 function initData(vm) {
   let data = vm.$options.data;
 
-  data = vm._data = isFunction(data) ? data() : data;
-  // data = isFunction(data) ? data.call(vm) : data;
+  // data = vm._data = isFunction(data) ? data() : data;
+  data = vm._data = isFunction(data) ? data.call(vm) : data;
 
   //对data的第一层数据进行代理 使得vm.name === vm._data.name;
 

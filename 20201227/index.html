@@ -7,7 +7,7 @@
 </head>
 <body>
   <div id="app" class="main" style="color: red ; font-size: 12px ;" attr="nihao ">
-    <h1>wzy {{msg}} tll</h1>
+    <h1>wzy {{arr}} tll</h1>
   </div>
 </body>
 <script src="dist/umd/vue.js"></script>
@@ -17,6 +17,10 @@
     data() {
       return {
         msg: 'Hello World',
+        obj: {
+          name: 'wzy',
+          age: 22
+        },
         arr: [
           {
             name: 'wzy'
@@ -30,9 +34,10 @@
   })
 
   setTimeout(() => {
-    vm.msg = "1111";
-    vm.msg = "2222";
-    vm.msg = "3333";
+    // vm.obj = {
+    //   name: 'aaaaa'
+    // }
+    vm.arr.push({name: 'aaaaa'});
   }, 1000)
   
 </script>
