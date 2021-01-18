@@ -310,11 +310,14 @@
     }();
 
     Dep.target = null;
+    var stack$1 = [];
     function pushTarget(watcher) {
       Dep.target = watcher;
+      stack$1.push(watcher);
     }
     function popTarget() {
-      Dep.target = null;
+      stack$1.pop();
+      Dep.target = stack$1[stack$1.length - 1];
     }
 
     var cbs = [];
@@ -378,16 +381,32 @@
         this.uid = uid$1++;
         this.vm = vm;
         this.updateOrFn = updateOrFn;
-        this.afterUpdate = afterUpdate;
+        this.cb = afterUpdate;
         this.options = options;
-        this.getter = updateOrFn; //执行它 会加载变量数据，到变量的get方法
+        this.user = !!options.user; //双重否定赋值给user-boolean 类型
+
+        this.lazy = !!options.lazy; //双重否定赋值给user-boolean 类型
+
+        this.dirty = !!options.lazy;
+
+        if (typeof updateOrFn === 'string') {
+          //如果是字符串类型，
+          this.getter = function () {
+            var names = updateOrFn.split('.');
+            return names.reduce(function (preV, curV) {
+              return preV[curV];
+            }, vm);
+          };
+        } else {
+          this.getter = updateOrFn; //执行它 会加载变量数据，到变量的get方法
+        }
 
         this.deps = []; //收集deps，主要是为了计算watcher跟watch使用。
 
         this.depIds = []; //手机dep的id，防止重复添加
         //默认加载一次
 
-        this.get();
+        this.value = options.lazy ? undefined : this.get();
       }
 
       _createClass(Watcher, [{
@@ -395,8 +414,10 @@
         value: function get() {
           pushTarget(this); //将当前的watcher存放到dep中
 
-          this.getter();
+          var newValue = this.getter.call(this.vm);
           popTarget(); //取出watcher
+
+          return newValue;
         }
       }, {
         key: "addDep",
@@ -411,16 +432,44 @@
           }
         }
       }, {
+        key: "depend",
+        value: function depend() {
+          var i = this.deps.length;
+
+          while (i--) {
+            var dep = this.deps[i];
+            dep.depend();
+          }
+        }
+      }, {
         key: "update",
         value: function update() {
           //vue中的更新是异步的，等待所有的变量赋值完毕后，一把更新
           //---所以需要先将watcher缓存起来，最后在调用run方法
-          queueWatchers(this);
+          if (this.lazy) {
+            this.dirty = true;
+          } else {
+            queueWatchers(this);
+          }
+        }
+      }, {
+        key: "evaluate",
+        value: function evaluate() {
+          this.dirty = false;
+          this.value = this.get();
         }
       }, {
         key: "run",
         value: function run() {
-          this.get();
+          var newValue = this.get();
+          var oldValue = this.value;
+
+          if (this.user) {
+            //如果是用户watcher，执行回调
+            this.cb.call(this.vm, newValue, oldValue);
+          }
+
+          this.value = newValue;
         }
       }]);
 
@@ -616,6 +665,9 @@
 
     function initStates(vm) {
       if (vm.$options.data) initData(vm); //初始化data属性
+
+      if (vm.$options.computed) initComputed(vm, vm.$options.computed);
+      if (vm.$options.watch) initWatch(vm, vm.$options.watch);
     }
 
     function proxy(vm, source, key) {
@@ -640,6 +692,75 @@
 
 
       observe(data);
+    }
+
+    function initWatch(vm, watchs) {
+      var keys = Object.keys(watchs);
+      keys.forEach(function (key) {
+        if (Array.isArray(watchs[key])) {
+          //如果是数组--watch可以写成数组的形式
+          for (var i = 0; i < watchs[key].length; i++) {
+            var handler = watchs[key][i];
+            createWatch(vm, key, handler);
+          }
+        } else {
+          var _handler = watchs[key];
+          createWatch(vm, key, _handler);
+        }
+      });
+    }
+
+    function createWatch(vm, name, handler) {
+      vm.$watch(name, handler); //需要扩展原型
+    }
+
+    function initComputed(vm, computeds) {
+      var keys = Object.keys(computeds);
+      var watcherMap = vm._computedWatcherMap = {};
+      keys.forEach(function (key) {
+        var userDef = computeds[key]; //用户定义的
+
+        var getter = typeof userDef == 'function' ? userDef : userDef.get;
+        var watcher = createComputed(vm, getter, function () {}, {
+          lazy: true
+        }); //创建computed
+
+        watcherMap[key] = watcher;
+        proxyComputed(vm, key); //代理computed的属性到vm上
+      });
+    }
+
+    function createComputed(vm, getter, cb, options) {
+      return new Watcher(vm, getter, cb, options);
+    }
+
+    function proxyComputed(vm, key, userDef) {
+      var shareProperty = {}; // if (typeof userDef === 'function') {
+      //   //如果是函数
+      //   shareProperty.get = userDef;
+      // } else {
+      //   shareProperty.get = createComputedGetter(key);
+      // }
+
+      shareProperty.get = createComputedGetter(key);
+      Object.defineProperty(vm, key, shareProperty);
+    }
+
+    function createComputedGetter(key) {
+      return function computedGetter() {
+        var watcher = this._computedWatcherMap[key];
+
+        if (watcher.dirty) {
+          console.log('sss');
+          watcher.evaluate();
+        }
+
+        if (Dep.target) {
+          watcher.depend();
+        }
+
+        return watcher.value;
+      };
     }
 
     function initMixin(Vue) {
@@ -674,6 +795,13 @@
         }
 
         mountComponent(vm);
+      };
+
+      Vue.prototype.$watch = function (name, handler) {
+        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+        //这里开始new Watcher  这里需要标识是用户watcher，表示是用户自己创建的watcher
+        options.user = true;
+        new Watcher(this, name, handler, options);
       };
     }
 
@@ -731,3 +859,4 @@
     return Vue;
 
 })));
+//# sourceMappingURL=vue.js.map

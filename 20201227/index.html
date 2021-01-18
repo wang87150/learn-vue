@@ -7,37 +7,42 @@
 </head>
 <body>
   <div id="app" class="main" style="color: red ; font-size: 12px ;" attr="nihao ">
-    <h1>wzy {{arr}} tll</h1>
+    <h1>{{fullName}}</h1>
+    <h1>{{fullName}}</h1>
   </div>
 </body>
 <script src="dist/umd/vue.js"></script>
+<!-- <script src="node_modules/vue/dist/vue.js"></script> -->
 <script>
   const vm = new Vue({
     el: '#app',
     data() {
       return {
-        msg: 'Hello World',
-        obj: {
-          name: 'wzy',
-          age: 22
-        },
-        arr: [
-          {
-            name: 'wzy'
-          },
-          {
-            name: '123'
-          }
-        ]
+        firstName: 'wang',
+        lastName: 'zy'
       }
+    },
+    computed: {
+      fullName: {
+        get: function() {
+          console.log(1)
+          return `${this.firstName}  ${this.lastName}`;
+        },
+        set: function(value) {
+          console.log('value', value);
+        }
+      }
+
+      // fullName() {
+      //   console.log(1);
+      //   return `${this.firstName}  ${this.lastName}`;
+      // }
     }
   })
 
   setTimeout(() => {
-    // vm.obj = {
-    //   name: 'aaaaa'
-    // }
-    vm.arr.push({name: 'aaaaa'});
+    // console.log(vm.fullName)
+    vm.firstName = '1111';
   }, 1000)
   
 </script>

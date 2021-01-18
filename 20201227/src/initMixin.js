@@ -1,5 +1,6 @@
 import { compileToFunction } from "./compile/index";
 import { mountComponent } from "./lifecycle";
+import Watcher from "./observe/watcher";
 import initStates from "./state";
 
 export default initMixin;
@@ -31,5 +32,11 @@ function initMixin(Vue) {
     }
 
     mountComponent(vm, el);
+  }
+
+  Vue.prototype.$watch = function(name, handler, options = {}) {
+    //这里开始new Watcher  这里需要标识是用户watcher，表示是用户自己创建的watcher
+    options.user = true;
+    new Watcher(this, name, handler, options);
   }
 }

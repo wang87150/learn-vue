@@ -5,7 +5,7 @@ export default {
     format: 'umd',
     file: './dist/umd/vue.js',
     name: 'Vue',
-    sourceMap: true
+    sourcemap: true
   },
   plugins: [
     babel({
