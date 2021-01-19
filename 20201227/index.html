@@ -7,15 +7,67 @@
 </head>
 <body>
   <div id="app" class="main" style="color: red ; font-size: 12px ;" attr="nihao ">
-    <h1>{{fullName}}</h1>
-    <h1>{{fullName}}</h1>
+    <!-- <my-btn></my-btn> -->
+    <my-button></my-button>
+    <!-- <my-button1></my-button1> -->
+
   </div>
 </body>
-<script src="dist/umd/vue.js"></script>
-<!-- <script src="node_modules/vue/dist/vue.js"></script> -->
+<!-- <script src="dist/umd/vue.js"></script> -->
+<script src="node_modules/vue/dist/vue.js"></script>
 <script>
+  // 全局注册
+  Vue.component('my-button', {
+    template: '<button>{{msg}}</button>',
+    data() {
+      return {
+        msg: 'Hello'
+      }
+    },
+    beforeCreate() {
+      console.log('beforeCreated3')
+    },
+    mounted() {
+      console.log('mounted3')
+    }
+  })
+
+  Vue.mixin({
+    'beforeCreate': function(){
+      console.log('beforeCreated1')
+    }
+  }).mixin({
+    'mounted': function(){
+      console.log('mounted1')
+    }
+  })
   const vm = new Vue({
     el: '#app',
+    //局部注册
+    components: {
+      'my-button': {
+        template: '<button>{{msg}}</button>',
+        data() {
+          return {
+            msg: 'Hello111'
+          }
+        }
+      },
+      'my-button1': {
+        template: '<button>{{msg}}</button>',
+        data() {
+          return {
+            msg: 'Hello1'
+          }
+        }
+      }
+    },
+    beforeCreate() {
+      console.log('beforeCreated2')
+    },
+    mounted() {
+      console.log('mounted2')
+    },
     data() {
       return {
         firstName: 'wang',
@@ -39,11 +91,5 @@
       // }
     }
   })
-
-  setTimeout(() => {
-    // console.log(vm.fullName)
-    vm.firstName = '1111';
-  }, 1000)
-  
 </script>
 </html>
