@@ -7,19 +7,24 @@
 </head>
 <body>
   <div id="app" class="main" style="color: red ; font-size: 12px ;" attr="nihao ">
-    <h1>{{fullName}}</h1>
-    <h1>{{fullName}}</h1>
+    <div @click="tap1" v-html="htmlStr"></div>
   </div>
 </body>
-<script src="dist/umd/vue.js"></script>
-<!-- <script src="node_modules/vue/dist/vue.js"></script> -->
+<!-- <script src="dist/umd/vue.js"></script> -->
+<script src="node_modules/vue/dist/vue.js"></script>
 <script>
   const vm = new Vue({
     el: '#app',
     data() {
       return {
         firstName: 'wang',
-        lastName: 'zy'
+        lastName: 'zy',
+        htmlStr: ''
+      }
+    },
+    methods: {
+      tap1(e) {
+        console.log(e.target.id);
       }
     },
     computed: {
@@ -42,7 +47,10 @@
 
   setTimeout(() => {
     // console.log(vm.fullName)
-    vm.firstName = '1111';
+    // vm.firstName = '1111';
+    // vm.htmlStr = `<div><span>Hello World</span><a id='wo'>点我点我</></div>`
+      let aa = vm.$render(`<div><span>Hello World</span><a id='wo'>点我点我</></div>`);
+        console.log(aa)
   }, 1000)
   
 </script>
