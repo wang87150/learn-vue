@@ -8,9 +8,11 @@ export function mountComponent(vm, el) {
     vm._update(vm._render(vm));   //将生成的虚拟dom 转化成真实dom
   }
 
+  callHooks(vm, 'beforeMount');
   new Watcher(vm, updateComponent, () => {
     console.log('我更新了');
-  }, {})
+  }, {});
+  callHooks(vm, 'mounted');
 }
 
 export function lifecycleMixin(Vue) {
@@ -19,4 +21,12 @@ export function lifecycleMixin(Vue) {
     let vm = this;
     vm.$el = patch(vm.$el, vnode);
   }
+}
+
+export function callHooks(vm, hookName) {
+  let hookCbs = vm.$options[hookName];
+  if (!hookCbs) return;
+  hookCbs.forEach(hookCb => {
+    hookCb.call(vm);
+  })
 }

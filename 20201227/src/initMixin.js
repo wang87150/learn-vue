@@ -1,7 +1,8 @@
 import { compileToFunction } from "./compile/index";
-import { mountComponent } from "./lifecycle";
+import { callHooks, mountComponent } from "./lifecycle";
 import Watcher from "./observe/watcher";
 import initStates from "./state";
+import mergeOption from "./util/mergeOptions";
 
 export default initMixin;
 
@@ -9,7 +10,12 @@ function initMixin(Vue) {
   Vue.prototype._init = function(options) {
     const vm = this;  //将当前的this对象--Vue实例  赋值给vm
     vm.$options = options || {};  //新增$options属性，
+    console.log('options', vm.constructor.options);
+    vm.$options = mergeOption(vm.constructor.options, options);
+
+    callHooks(vm, 'beforeCreate');
     initStates(vm); //初始化状态，包括props methods data computed watch等属性
+    callHooks(vm, 'created');
     
     //编译模板
     if (options.el) {

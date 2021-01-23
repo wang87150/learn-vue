@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VUe</title>
 </head>
+
 <body>
   <div id="app" class="main" style="color: red ; font-size: 12px ;" attr="nihao ">
-    <!-- <my-btn></my-btn> -->
-    <my-button></my-button>
-    <!-- <my-button1></my-button1> -->
-
+    <h1>{{firstName}}</h1>
+    <my-button1></my-button1>
   </div>
 </body>
-<!-- <script src="dist/umd/vue.js"></script> -->
-<script src="node_modules/vue/dist/vue.js"></script>
+<script src="dist/umd/vue.js"></script>
+<!-- <script src="node_modules/vue/dist/vue.js"></script> -->
 <script>
   // 全局注册
   Vue.component('my-button', {
@@ -32,41 +32,26 @@
     }
   })
 
-  Vue.mixin({
-    'beforeCreate': function(){
-      console.log('beforeCreated1')
-    }
-  }).mixin({
-    'mounted': function(){
-      console.log('mounted1')
+  Vue.component('my-button1', {
+    template: '<button>{{msg}}</button>',
+    data() {
+      return {
+        msg: 'Hello111'
+      }
+    },
+    beforeCreate() {
+      console.log('beforeCreated3')
+    },
+    mounted() {
+      console.log('mounted3')
     }
   })
   const vm = new Vue({
     el: '#app',
-    //局部注册
     components: {
       'my-button': {
-        template: '<button>{{msg}}</button>',
-        data() {
-          return {
-            msg: 'Hello111'
-          }
-        }
-      },
-      'my-button1': {
-        template: '<button>{{msg}}</button>',
-        data() {
-          return {
-            msg: 'Hello1'
-          }
-        }
+        template: '<button>world</button>'
       }
-    },
-    beforeCreate() {
-      console.log('beforeCreated2')
-    },
-    mounted() {
-      console.log('mounted2')
     },
     data() {
       return {
@@ -76,17 +61,15 @@
       }
     },
     methods: {
-      tap1(e) {
-        console.log(e.target.id);
-      }
+
     },
     computed: {
       fullName: {
-        get: function() {
+        get: function () {
           console.log(1)
           return `${this.firstName}  ${this.lastName}`;
         },
-        set: function(value) {
+        set: function (value) {
           console.log('value', value);
         }
       }
@@ -98,13 +81,7 @@
     }
   })
 
-  setTimeout(() => {
-    // console.log(vm.fullName)
-    // vm.firstName = '1111';
-    // vm.htmlStr = `<div><span>Hello World</span><a id='wo'>点我点我</></div>`
-      let aa = vm.$render(`<div><span>Hello World</span><a id='wo'>点我点我</></div>`);
-        console.log(aa)
-  }, 1000)
-  
+  console.log(vm)
 </script>
+
 </html>
