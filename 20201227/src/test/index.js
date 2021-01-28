@@ -1,14 +1,22 @@
-const arr = ['a', 'b', 'c', 'd'];
-const obj = arr.reduceRight((preV, curV) => {
-  return {
-    [curV]: preV
+//防抖
+function debounce() {
+  var fb = function () {
+    console.log("1111111");
   }
-})
-const c = 'a.b.c';
-const value = (c.split('.')).reduce((preV, curV) => {
-  if (preV.hasOwnProperty(curV)) {
-    return preV[curV]
+  var fn = createDebounce(fb, 3000);
+  fn();
+}
+
+//创造防抖函数
+function createDebounce() {
+  var startTime = null;
+  var endTime = null;
+  var st = null;
+  var n = '000';
+  return function () {
+    console.log('n', n);
   }
-  return obj[preV][curV]
-}, obj)
-console.log('value', value);
+}
+
+let fn = createDebounce();
+fn();

@@ -10,42 +10,15 @@
 <body>
   <div id="app" class="main" style="color: red ; font-size: 12px ;" attr="nihao ">
     <h1>{{firstName}}</h1>
-    <my-button1></my-button1>
+    <button @click="debounce">防抖</button>
+    <button @click="throttle">节流</button>
   </div>
 </body>
-<script src="dist/umd/vue.js"></script>
-<!-- <script src="node_modules/vue/dist/vue.js"></script> -->
+<!-- <script src="dist/umd/vue.js"></script> -->
+<script src="node_modules/vue/dist/vue.js"></script>
 <script>
-  // 全局注册
-  Vue.component('my-button', {
-    template: '<button>{{msg}}</button>',
-    data() {
-      return {
-        msg: 'Hello'
-      }
-    },
-    beforeCreate() {
-      console.log('beforeCreated3')
-    },
-    mounted() {
-      console.log('mounted3')
-    }
-  })
-
-  Vue.component('my-button1', {
-    template: '<button>{{msg}}</button>',
-    data() {
-      return {
-        msg: 'Hello111'
-      }
-    },
-    beforeCreate() {
-      console.log('beforeCreated3')
-    },
-    mounted() {
-      console.log('mounted3')
-    }
-  })
+  
+  
   const vm = new Vue({
     el: '#app',
     components: {
@@ -57,11 +30,77 @@
       return {
         firstName: 'wang',
         lastName: 'zy',
-        htmlStr: ''
+        htmlStr: '',
+        debounceObj: {
+          a: '111',
+          fn: null
+        },
+        throttleObj: {
+          a: '111',
+          fn: null
+        }
       }
     },
     methods: {
+      //防抖
+      debounce() {
+        this.debounceObj.fn.call(this.debounceObj, new Date(), 'n');
+      },
+      throttle() {
+        this.throttleObj.fn.call(this.throttleObj, new Date(), 'n');
+      },
 
+      //创造防抖函数
+      createDebounce(fn, delay) {
+        let startTime = null;
+        let endTime = null;
+        let st = null;
+        return function () {
+          let context = this;
+          let args = arguments;
+          
+          let cb = function () {
+            startTime = null;
+            fn.apply(context, args)
+          }
+          if (!startTime) {
+            startTime = Date.now();
+            st = setTimeout(cb, delay);
+          } else {
+            clearTimeout(st);
+            endTime = Date.now();
+            if (endTime - startTime < delay) {
+              st = setTimeout(cb, delay);
+            } else {
+              cb();
+            }
+            startTime = endTime;
+          }
+        }
+      },
+
+      createThrottle(fn, delay) {
+        let startTime = null;
+        let endTime = null;
+        return function() {
+          let context = this;
+          let args = arguments;
+          let cb = function() {
+            fn.apply(context, args);
+          }
+          if (!startTime) {
+            startTime = Date.now();
+            setTimeout(cb, delay);
+          } else {
+            endTime = Date.now();
+            if (endTime - startTime >= delay) {
+              startTime = endTime;
+              setTimeout(cb, delay);
+            } else {
+            }
+          }
+        }
+      }
     },
     computed: {
       fullName: {
@@ -78,6 +117,18 @@
       //   console.log(1);
       //   return `${this.firstName}  ${this.lastName}`;
       // }
+    },
+    mounted() {
+      let cb = function (a, b) {
+        console.log("a", a);
+        console.log("b", b);
+        console.log("a", this.a);
+      }
+      let fn = this.createDebounce(cb, 3000);
+      this.debounceObj.fn = fn;
+
+      let fn1 = this.createThrottle(cb, 3000);
+      this.throttleObj.fn = fn1;
     }
   })
 
